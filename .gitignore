@@ -1,0 +1,21 @@
+# Build/Cache
+target/
+*.class
+*.log
+*.tmp
+*.out
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+.project
+.settings/
+.classpath
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+*.env
