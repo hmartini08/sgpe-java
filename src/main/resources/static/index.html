@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>EMPRESA XX · Painel</title>
+  <link rel="stylesheet" href="/css/app.css"/>
+  <style>
+    /* pequenos toques úteis para edição */
+    #tbl-usuarios tbody tr { cursor: pointer; }
+    .edit-hint { font-size:.9rem; color:#9bb; margin:-6px 0 14px 0 }
+    .pill { display:inline-block; padding:.1rem .5rem; border-radius:999px; background:#22313f; color:#9fd; font-size:.75rem }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Lateral -->
+    <aside class="sidebar">
+      <div class="brand">EMPRESA <span>XX</span></div>
+
+      <div class="menu">
+        <button data-panel="usuarios" class="active">Cadastro de Usuários</button>
+        <button data-panel="projetos">Cadastro de Projetos</button>
+        <button data-panel="equipes">Cadastro de Equipes</button>
+
+        <a href="/logout" class="btn secondary" style="text-align:center">Sair</a>
+      </div>
+
+      <p class="notice">
+        Você está autenticado. Use os formulários ao lado; listagens simples aparecem abaixo de cada cadastro.
+      </p>
+    </aside>
+
+    <!-- Conteúdo -->
+    <main class="content">
+
+      <!-- Usuários -->
+      <section id="panel-usuarios" class="card">
+        <h2>Cadastro de Usuários</h2>
+        <p class="muted edit-hint">
+          Clique em uma linha da tabela para trazer os dados e <b>editar</b>.
+          <span class="pill" id="flag-edicao" hidden>EDITANDO</span>
+        </p>
+
+        <form id="form-usuario" class="grid cols-3" autocomplete="off">
+          <!-- usado para saber se é edição -->
+          <input type="hidden" name="id" id="usuario-id"/>
+
+          <label>Nome completo
+            <input name="nomeCompleto" id="usuario-nome" required>
+          </label>
+          <label>CPF
+            <input name="cpf" id="usuario-cpf" required>
+          </label>
+          <label>E-mail
+            <input type="email" name="email" id="usuario-email" required>
+          </label>
+
+          <label>Cargo
+            <input name="cargo" id="usuario-cargo">
+          </label>
+          <label>Login
+            <input name="login" id="usuario-login" required>
+          </label>
+          <label>Senha
+            <input type="password" name="senha" id="usuario-senha" placeholder="(deixe em branco para manter)">
+          </label>
+
+          <label>Perfil
+            <select name="perfil" id="usuario-perfil" required>
+              <option value="ADMINISTRADOR">Administrador</option>
+              <option value="GERENTE">Gerente</option>
+              <option value="COLABORADOR">Colaborador</option>
+            </select>
+          </label>
+
+          <div class="row">
+            <button class="btn" id="btn-salvar-usuario" type="submit">Salvar usuário</button>
+            <button class="btn secondary" id="btn-cancelar-edicao" type="button" hidden>Cancelar edição</button>
+            <button class="btn secondary" type="reset">Limpar</button>
+          </div>
+          <div id="msg-usuario" class="notice"></div>
+        </form>
+
+        <table class="table" id="tbl-usuarios">
+          <thead>
+            <tr><th>Nome</th><th>Login</th><th>Perfil</th><th>Email</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <!-- Projetos -->
+      <section id="panel-projetos" class="card" hidden>
+        <h2>Cadastro de Projetos</h2>
+        <p class="muted">Defina datas, status e o gerente responsável.</p>
+
+        <form id="form-projeto" class="grid cols-3" autocomplete="off">
+          <label>Nome do projeto
+            <input name="nome" required>
+          </label>
+          <label>Data de início
+            <input type="date" name="dataInicio" required>
+          </label>
+          <label>Data término prevista
+            <input type="date" name="dataTerminoPrevista" required>
+          </label>
+
+          <label class="cols-3" style="grid-column:1/-1">Descrição
+            <textarea name="descricao"></textarea>
+          </label>
+
+          <label>Status
+            <select name="status" required>
+              <option value="PLANEJADO">Planejado</option>
+              <option value="EM_ANDAMENTO">Em andamento</option>
+              <option value="CONCLUIDO">Concluído</option>
+              <option value="CANCELADO">Cancelado</option>
+            </select>
+          </label>
+
+          <label>Gerente responsável
+            <select name="gerenteId" id="sel-gerente" required>
+              <option value="">Carregando...</option>
+            </select>
+          </label>
+
+          <div class="row">
+            <button class="btn" type="submit">Salvar projeto</button>
+            <button class="btn secondary" type="reset">Limpar</button>
+          </div>
+          <div id="msg-projeto" class="notice"></div>
+        </form>
+
+        <table class="table" id="tbl-projetos">
+          <thead><tr><th>Projeto</th><th>Status</th><th>Gerente</th><th>Início</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <!-- Equipes -->
+      <section id="panel-equipes" class="card" hidden>
+        <h2>Cadastro de Equipes</h2>
+        <p class="muted">Defina membros. (Opcional: vincule a projetos).</p>
+
+        <form id="form-equipe" class="grid cols-3" autocomplete="off">
+          <label>Nome da equipe
+            <input name="nome" required>
+          </label>
+          <label class="cols-3" style="grid-column:1/-1">Descrição
+            <textarea name="descricao"></textarea>
+          </label>
+
+          <label class="cols-3" style="grid-column:1/-1">Membros (CTRL/CMD para múltiplos)
+            <select name="membros" id="sel-membros" multiple size="6" required></select>
+          </label>
+
+          <label class="cols-3" style="grid-column:1/-1">Projetos (opcional)
+            <select name="projetos" id="sel-projetos" multiple size="5"></select>
+          </label>
+
+          <div class="row">
+            <button class="btn" type="submit">Salvar equipe</button>
+            <button class="btn secondary" type="reset">Limpar</button>
+          </div>
+          <div id="msg-equipe" class="notice"></div>
+        </form>
+
+        <table class="table" id="tbl-equipes">
+          <thead><tr><th>Equipe</th><th>Membros</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

@@ -1,38 +1,99 @@
 package com.seuorg.sgpe.api;
 
-import com.seuorg.sgpe.domain.*;
-import com.seuorg.sgpe.repo.*;
-import com.seuorg.sgpe.service.ProjetoService;
+import com.seuorg.sgpe.api.dto.ProjetoDTO;
+import com.seuorg.sgpe.domain.Projeto;
+import com.seuorg.sgpe.domain.StatusProjeto;
+import com.seuorg.sgpe.domain.Usuario;
+import com.seuorg.sgpe.repo.ProjetoRepo;
+import com.seuorg.sgpe.repo.UsuarioRepo;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+
 import java.time.LocalDate;
 import java.util.List;
 
-@RestController @RequestMapping("/api/projetos")
+@RestController
+@RequestMapping("/api/projetos")
 public class ProjetoController {
-  private final ProjetoService service;
+
   private final ProjetoRepo repo;
-  private final EquipeRepo equipeRepo;
+  private final UsuarioRepo usuarioRepo;
 
-  public ProjetoController(ProjetoService s, ProjetoRepo r, EquipeRepo e){ this.service=s; this.repo=r; this.equipeRepo=e; }
+  public ProjetoController(ProjetoRepo repo, UsuarioRepo usuarioRepo) {
+    this.repo = repo;
+    this.usuarioRepo = usuarioRepo;
+  }
 
+  // -------- listagem como DTO (evita proxy e lazy)
+  @GetMapping
+  @Transactional(readOnly = true)
+  public List<ProjetoDTO> listar() {
+    return repo.findAllWithGerente()
+        .stream()
+        .map(this::toDTO)
+        .toList();
+  }
+
+  // -------- criação
   @PostMapping
-  public Projeto criar(@RequestParam String nome,
-                       @RequestParam(required=false) String descricao,
-                       @RequestParam String dataInicio,
-                       @RequestParam(required=false) String dataTerminoPrevista,
-                       @RequestParam StatusProjeto status,
-                       @RequestParam Long gerenteId){
-    LocalDate ini = LocalDate.parse(dataInicio);
-    LocalDate fim = (dataTerminoPrevista==null || dataTerminoPrevista.isBlank()) ? null : LocalDate.parse(dataTerminoPrevista);
-    return service.criar(nome, descricao, ini, fim, status, gerenteId);
+  @Transactional
+  public ProjetoDTO criar(@RequestBody ProjetoDTO dto) {
+    Projeto p = new Projeto();
+    p.setNome(dto.nome);
+    p.setDescricao(dto.descricao);
+
+    if (dto.dataInicio != null && !dto.dataInicio.isBlank()) {
+      p.setDataInicio(LocalDate.parse(dto.dataInicio));
+    }
+    if (dto.dataTerminoPrevista != null && !dto.dataTerminoPrevista.isBlank()) {
+      p.setDataTerminoPrevista(LocalDate.parse(dto.dataTerminoPrevista));
+    }
+
+    // aceita enum direto ou string
+    if (dto.status != null) {
+      p.setStatus(dto.status);
+    } else {
+      p.setStatus(StatusProjeto.PLANEJADO);
+    }
+
+    if (dto.gerenteId != null) {
+      Usuario gerente = usuarioRepo.findById(dto.gerenteId)
+          .orElseThrow(() -> new IllegalArgumentException("Gerente não encontrado: id=" + dto.gerenteId));
+      p.setGerente(gerente);
+    } else {
+      throw new IllegalArgumentException("gerenteId é obrigatório");
+    }
+
+    Projeto salvo = repo.save(p);
+    // garantir que gerente esteja inicializado para montar DTO
+    salvo.getGerente().getId();
+
+    return toDTO(salvo);
   }
 
-  @PostMapping("/{projetoId}/alocar-equipe/{equipeId}")
-  public Projeto alocar(@PathVariable Long projetoId, @PathVariable Long equipeId){
-    return service.alocarEquipe(projetoId, equipeId, equipeRepo);
-  }
+  // -------- conversor entidade -> DTO
+  private ProjetoDTO toDTO(Projeto p) {
+    String di = p.getDataInicio() != null ? p.getDataInicio().toString() : null;
+    String dt = p.getDataTerminoPrevista() != null ? p.getDataTerminoPrevista().toString() : null;
 
-  @GetMapping public List<Projeto> listar(){ return repo.findAll(); }
-  @GetMapping("/{id}") public Projeto obter(@PathVariable Long id){ return repo.findById(id).orElseThrow(); }
-  @DeleteMapping("/{id}") public void excluir(@PathVariable Long id){ repo.deleteById(id); }
+    Long gid = null;
+    String gnome = null;
+    String glogin = null;
+    if (p.getGerente() != null) {
+      gid = p.getGerente().getId();
+      gnome = p.getGerente().getNomeCompleto();
+      glogin = p.getGerente().getLogin();
+    }
+
+    return new ProjetoDTO(
+        p.getId(),
+        p.getNome(),
+        p.getDescricao(),
+        di,
+        dt,
+        p.getStatus(),
+        gid,
+        gnome,
+        glogin);
+  }
 }

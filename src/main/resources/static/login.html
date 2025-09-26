@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>EMPRESA XX · Acesso Admin</title>
+  <link rel="stylesheet" href="/css/login.css"/>
+</head>
+<body>
+  <main class="shell">
+    <section class="card">
+      <h1 class="brand">EMPRESA <span>XX</span> · <small>Acesso Admin</small></h1>
+
+      <p class="muted">Entre com sua conta de administrador para gerenciar cadastros.</p>
+
+      <form class="form" method="post" action="/login">
+        <label>
+          <span>Usuário</span>
+          <input name="username" type="text" autocomplete="username" value="admin" required/>
+        </label>
+
+        <label>
+          <span>Senha</span>
+          <input name="password" type="password" autocomplete="current-password" required/>
+        </label>
+
+        <button class="btn" type="submit">Entrar</button>
+
+        <p id="msg" class="feedback" aria-live="polite"></p>
+        <p class="build">Versão de desenvolvimento</p>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    // Mensagens vindas do Spring Security (?error / ?logout)
+    const p = new URLSearchParams(location.search);
+    const msg = document.getElementById('msg');
+    if (p.has('error')) {
+      msg.textContent = 'Credenciais inválidas ou usuário sem permissão.';
+      msg.classList.add('error');
+    }
+    if (p.has('logout')) {
+      msg.textContent = 'Você saiu do sistema.';
+      msg.classList.remove('error');
+      msg.classList.add('ok');
+    }
+  </script>
+</body>
+</html>

@@ -1,45 +1,97 @@
 package com.seuorg.sgpe.domain;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 
-@Entity @Table(name="projetos")
+@Entity
+@Table(name = "projetos") // <- padronizado
 public class Projeto {
-  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @NotBlank @Column(unique = true) private String nome;
+  private String nome;
+  @Column(columnDefinition = "text")
   private String descricao;
 
-  @NotNull private LocalDate dataInicio;
+  private LocalDate dataInicio;
   private LocalDate dataTerminoPrevista;
 
-  @Enumerated(EnumType.STRING) @NotNull
+  @Enumerated(EnumType.STRING)
   private StatusProjeto status;
 
-  @ManyToOne(optional = false) @JoinColumn(name="gerente_id")
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "gerente_id", nullable = false)
   private Usuario gerente;
 
-  @ManyToMany
-  @JoinTable(name="projeto_equipes",
-     joinColumns=@JoinColumn(name="projeto_id"),
-     inverseJoinColumns=@JoinColumn(name="equipe_id"))
+  // lado inverso do ManyToMany (dono está em Equipe)
+  @ManyToMany(mappedBy = "projetos")
   private Set<Equipe> equipes = new HashSet<>();
 
-  public Long getId(){ return id; }
-  public String getNome(){ return nome; }
-  public void setNome(String v){ this.nome = v; }
-  public String getDescricao(){ return descricao; }
-  public void setDescricao(String v){ this.descricao = v; }
-  public LocalDate getDataInicio(){ return dataInicio; }
-  public void setDataInicio(LocalDate v){ this.dataInicio = v; }
-  public LocalDate getDataTerminoPrevista(){ return dataTerminoPrevista; }
-  public void setDataTerminoPrevista(LocalDate v){ this.dataTerminoPrevista = v; }
-  public StatusProjeto getStatus(){ return status; }
-  public void setStatus(StatusProjeto v){ this.status = v; }
-  public Usuario getGerente(){ return gerente; }
-  public void setGerente(Usuario v){ this.gerente = v; }
-  public Set<Equipe> getEquipes(){ return equipes; }
+  // getters/setters
+  public Long getId() {
+    return id;
+  }
+
+  public void setId(Long id) {
+    this.id = id;
+  }
+
+  public String getNome() {
+    return nome;
+  }
+
+  public void setNome(String nome) {
+    this.nome = nome;
+  }
+
+  public String getDescricao() {
+    return descricao;
+  }
+
+  public void setDescricao(String descricao) {
+    this.descricao = descricao;
+  }
+
+  public LocalDate getDataInicio() {
+    return dataInicio;
+  }
+
+  public void setDataInicio(LocalDate dataInicio) {
+    this.dataInicio = dataInicio;
+  }
+
+  public LocalDate getDataTerminoPrevista() {
+    return dataTerminoPrevista;
+  }
+
+  public void setDataTerminoPrevista(LocalDate dataTerminoPrevista) {
+    this.dataTerminoPrevista = dataTerminoPrevista;
+  }
+
+  public StatusProjeto getStatus() {
+    return status;
+  }
+
+  public void setStatus(StatusProjeto status) {
+    this.status = status;
+  }
+
+  public Usuario getGerente() {
+    return gerente;
+  }
+
+  public void setGerente(Usuario gerente) {
+    this.gerente = gerente;
+  }
+
+  public Set<Equipe> getEquipes() {
+    return equipes;
+  }
+
+  public void setEquipes(Set<Equipe> equipes) {
+    this.equipes = equipes;
+  }
 }

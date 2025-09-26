@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>EMPRESA XX · Painel Admin</title>
+  <style>
+    :root{
+      --bg:#0f172a; --card:#111827; --ink:#e5e7eb; --mut:#94a3b8; --brand:#38bdf8; --ok:#10b981; --warn:#f59e0b; --err:#ef4444; --line:#1f2937;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font:16px/1.5 system-ui;background:linear-gradient(180deg,#0b1220,#0f172a 60%);color:var(--ink)}
+    header{padding:24px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(15,23,42,.7);backdrop-filter:blur(6px)}
+    .container{max-width:1100px;margin:0 auto;padding:16px}
+    h1{margin:0;font-size:22px} h1 span{color:var(--brand)}
+    h2{margin:24px 0 12px;font-size:18px}
+    p.muted{color:var(--mut);margin:.25rem 0 1rem}
+    .grid{display:grid;gap:16px}
+    @media(min-width:900px){ .grid{grid-template-columns: 1.2fr 1fr} }
+    .card{background:linear-gradient(180deg,#0b1324,#0c152a);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    label{display:block;font-size:12px;color:var(--mut);margin-top:10px}
+    input, select, textarea{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #233046;background:#0b1220;color:var(--ink);outline:none}
+    button{border:0;padding:10px 14px;border-radius:10px;cursor:pointer;color:#091322;background:var(--brand);font-weight:600}
+    button.ghost{background:#1f2a44;color:var(--ink)}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th, td{border-bottom:1px solid var(--line);padding:10px 8px;text-align:left}
+    th{color:#9fb2d0;font-weight:600}
+    .ok{color:var(--ok)} .err{color:var(--err)} .warn{color:var(--warn)}
+    .split{display:grid;gap:12px} @media(min-width:700px){ .split{grid-template-columns:1fr 1fr} }
+    .pill{padding:6px 10px;border-radius:999px;border:1px dashed #36527e;color:#9fb2d0;font-size:12px}
+    .kbd{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas;background:#0b1220;border:1px solid #233046;padding:2px 6px;border-radius:6px}
+    .footer{color:#6b7280;font-size:12px;padding:16px;text-align:center}
+  </style>
+</head>
+<body>
+<header>
+  <div class="container row" style="justify-content:space-between">
+    <h1>EMPRESA <span>XX</span> · Painel do Administrador</h1>
+    <div class="row" style="gap:8px">
+      <span class="pill">API: <span id="env-url"></span></span>
+      <button class="ghost" onclick="health()">Health</button>
+      <button onclick="logout()">Sair</button>
+    </div>
+  </div>
+</header>
+
+<div class="container grid">
+  <!-- Usuários -->
+  <section class="card">
+    <h2>Usuários</h2>
+    <div class="row">
+      <button onclick="listarUsuarios()">Listar</button>
+      <span class="muted">GET <span class="kbd">/api/usuarios</span></span>
+    </div>
+    <div id="usuarios-list"></div>
+    <hr style="border:0;border-top:1px solid var(--line);margin:12px 0">
+    <h3 style="margin:.5rem 0">Criar usuário</h3>
+    <div class="split">
+      <div>
+        <label>Nome completo</label><input id="u_nome" />
+        <label>CPF</label><input id="u_cpf" />
+        <label>E-mail</label><input id="u_email" />
+        <label>Cargo</label><input id="u_cargo" />
+      </div>
+      <div>
+        <label>Login</label><input id="u_login" />
+        <label>Senha</label><input id="u_senha" type="password" />
+        <label>Perfil</label>
+        <select id="u_perfil">
+          <option>ADMINISTRADOR</option>
+          <option>GERENTE</option>
+          <option>COLABORADOR</option>
+        </select>
+      </div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button onclick="criarUsuario()">Criar</button>
+      <span class="muted">POST <span class="kbd">/api/usuarios</span> (JSON)</span>
+    </div>
+    <div id="usuarios-msg" class="muted"></div>
+  </section>
+
+  <!-- Projetos -->
+  <section class="card">
+    <h2>Projetos</h2>
+    <div class="row">
+      <button onclick="listarProjetos()">Listar</button>
+      <span class="muted">GET <span class="kbd">/api/projetos</span></span>
+    </div>
+    <div id="projetos-list"></div>
+    <hr style="border:0;border-top:1px solid var(--line);margin:12px 0">
+    <h3 style="margin:.5rem 0">Criar projeto</h3>
+    <div class="split">
+      <div>
+        <label>Nome</label><input id="p_nome" />
+        <label>Descrição</label><textarea id="p_desc" rows="3"></textarea>
+        <label>Gerente (ID usuário)</label><input id="p_gerente" />
+      </div>
+      <div>
+        <label>Data início (YYYY-MM-DD)</label><input id="p_ini" placeholder="2025-09-01" />
+        <label>Data término prevista (YYYY-MM-DD)</label><input id="p_fim" placeholder="2025-12-31" />
+        <label>Status</label>
+        <select id="p_status">
+          <option>PLANEJADO</option>
+          <option>EM_ANDAMENTO</option>
+          <option>CONCLUIDO</option>
+          <option>CANCELADO</option>
+        </select>
+      </div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button onclick="criarProjeto()">Criar</button>
+      <span class="muted">POST <span class="kbd">/api/projetos</span> (JSON)</span>
+    </div>
+    <div id="projetos-msg" class="muted"></div>
+  </section>
+
+  <!-- Equipes -->
+  <section class="card">
+    <h2>Equipes</h2>
+    <div class="row">
+      <button onclick="listarEquipes()">Listar</button>
+      <span class="muted">GET <span class="kbd">/api/equipes</span></span>
+    </div>
+    <div id="equipes-list"></div>
+    <hr style="border:0;border-top:1px solid var(--line);margin:12px 0">
+    <h3 style="margin:.5rem 0">Criar equipe</h3>
+    <div class="split">
+      <div><label>Nome</label><input id="e_nome" /></div>
+      <div><label>Descrição</label><input id="e_desc" /></div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button onclick="criarEquipe()">Criar</button>
+      <span class="muted">POST <span class="kbd">/api/equipes</span> (JSON)</span>
+    </div>
+    <div id="equipes-msg" class="muted"></div>
+  </section>
+</div>
+
+<div class="footer">EMPRESA XX · SGPE — painel administrativo</div>
+
+<script>
+  const API = location.origin;
+  document.getElementById('env-url').textContent = API;
+
+  // exige login
+  (function guard(){
+    const u = localStorage.getItem('sgpe_user');
+    const p = localStorage.getItem('sgpe_pass');
+    if(!u || !p) location.replace('/login.html');
+  })();
+
+  function logout(){
+    localStorage.removeItem('sgpe_user');
+    localStorage.removeItem('sgpe_pass');
+    location.replace('/login.html');
+  }
+
+  function getHeaders(){
+    const u = localStorage.getItem('sgpe_user') || '';
+    const p = localStorage.getItem('sgpe_pass') || '';
+    const h = new Headers();
+    h.append('Content-Type','application/json');
+    if(u && p) h.append('Authorization','Basic '+btoa(u+':'+p));
+    return h;
+  }
+
+  async function health(){
+    try{
+      const r = await fetch(API+'/actuator/health');
+      const j = await r.json();
+      alert('Health: '+j.status);
+    }catch{ alert('Falha ao consultar health'); }
+  }
+
+  // Usuários
+  async function listarUsuarios(){
+    const el = document.getElementById('usuarios-list');
+    el.innerHTML = 'carregando...';
+    try{
+      const r = await fetch(API+'/api/usuarios',{headers:getHeaders()});
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      const data = await r.json();
+      el.innerHTML = renderTable(data,['id','nomeCompleto','cpf','email','cargo','login','perfil']);
+    }catch(e){ el.innerHTML = '<span class="err">'+e.message+'</span>'; }
+  }
+  async function criarUsuario(){
+    const body = {
+      nomeCompleto: byId('u_nome').value, cpf: byId('u_cpf').value,
+      email: byId('u_email').value, cargo: byId('u_cargo').value,
+      login: byId('u_login').value, senha: byId('u_senha').value,
+      perfil: byId('u_perfil').value
+    };
+    const msg = byId('usuarios-msg');
+    try{
+      const r = await fetch(API+'/api/usuarios',{method:'POST',headers:getHeaders(),body:JSON.stringify(body)});
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      msg.innerHTML = '<span class="ok">Usuário criado!</span>'; listarUsuarios();
+    }catch(e){ msg.innerHTML = '<span class="err">'+e.message+'</span>'; }
+  }
+
+  // Projetos
+  async function listarProjetos(){
+    const el = byId('projetos-list'); el.innerHTML='carregando...';
+    try{
+      const r = await fetch(API+'/api/projetos',{headers:getHeaders()});
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      const data = await r.json();
+      el.innerHTML = renderTable(data,['id','nome','descricao','dataInicio','dataTerminoPrevista','status','gerenteId']);
+    }catch(e){ el.innerHTML = '<span class="err">'+e.message+'</span>'; }
+  }
+  async function criarProjeto(){
+    const body = {
+      nome: byId('p_nome').value, descricao: byId('p_desc').value,
+      dataInicio: byId('p_ini').value, dataTerminoPrevista: byId('p_fim').value,
+      status: byId('p_status').value, gerenteId: Number(byId('p_gerente').value||0)
+    };
+    const msg = byId('projetos-msg');
+    try{
+      const r = await fetch(API+'/api/projetos',{method:'POST',headers:getHeaders(),body:JSON.stringify(body)});
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      msg.innerHTML = '<span class="ok">Projeto criado!</span>'; listarProjetos();
+    }catch(e){ msg.innerHTML = '<span class="err">'+e.message+'</span>'; }
+  }
+
+  // Equipes
+  async function listarEquipes(){
+    const el = byId('equipes-list'); el.innerHTML='carregando...';
+    try{
+      const r = await fetch(API+'/api/equipes',{headers:getHeaders()});
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      const data = await r.json();
+      el.innerHTML = renderTable(data,['id','nome','descricao']);
+    }catch(e){ el.innerHTML = '<span class="err">'+e.message+'</span>'; }
+  }
+  async function criarEquipe(){
+    const body = { nome: byId('e_nome').value, descricao: byId('e_desc').value };
+    const msg = byId('equipes-msg');
+    try{
+      const r = await fetch(API+'/api/equipes',{method:'POST',headers:getHeaders(),body:JSON.stringify(body)});
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      msg.innerHTML = '<span class="ok">Equipe criada!</span>'; listarEquipes();
+    }catch(e){ msg.innerHTML = '<span class="err">'+e.message+'</span>'; }
+  }
+
+  // helpers
+  function byId(id){ return document.getElementById(id); }
+  function renderTable(data, cols){
+    if(!Array.isArray(data)) return '<span class="warn">Resposta não é lista</span>';
+    if(data.length===0) return '<span class="muted">Sem registros.</span>';
+    const head = '<tr>'+cols.map(c=>`<th>${c}</th>`).join('')+'</tr>';
+    const rows = data.map(o=>'<tr>'+cols.map(c=>`<td>${safe(o[c])}</td>`).join('')+'</tr>').join('');
+    return '<table>'+head+rows+'</table>';
+  }
+  function safe(v){ return (v===null||v===undefined)?'':String(v); }
+
+  // auto
+  (function init(){ listarUsuarios(); })();
+</script>
+</body>
+</html>

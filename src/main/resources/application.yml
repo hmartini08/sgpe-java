@@ -6,12 +6,33 @@ spring:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/sgpe}
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD:postgres}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+
   jpa:
+    open-in-view: false
+    show-sql: false
     hibernate:
-      ddl-auto: update   # em prod prefira Flyway/Liquibase
+      # em DEV use 'update'; em PRD prefira 'validate' + migrações (Flyway/Liquibase)
+      ddl-auto: update
     properties:
+      hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
       hibernate.jdbc.time_zone: UTC
+      hibernate.format_sql: true
+      # >>> ESSENCIAL para não “renomear” e acabar criando novas tabelas:
+      # Respeita fielmente os nomes dados em @Table(name="...") ou o nome da entidade
+      hibernate.implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+      hibernate.physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
 
 management:
   endpoints:
-    web.exposure.include: health,info
+    web:
+      exposure:
+        include: health,info
+
+# (Opcional) logs úteis em DEV
+logging:
+  level:
+    org.hibernate.SQL: off
+    org.hibernate.orm.jdbc.bind: off
